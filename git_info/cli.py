@@ -7,14 +7,18 @@ from github import Github, UnknownObjectException
 
 
 def get_pr_info(pr_url):
-    regex = r"https://github\.com/(.*?)/pull/(\d+)"
+    if not pr_url:
+        raise click.exceptions.ClickException("Invalid PR URL")
+
+    regex = r"https://(api\.|)github\.com/(repos\/|)(?P<repo>.*?)/pulls?/(?P<pull_id>\d+)"
     matches = re.match(regex, pr_url)
 
     client = Github(os.getenv("GITHUB_TOKEN"))
 
     try:
-        repo = client.get_repo(matches.group(1))
-        pull_request = repo.get_pull(int(matches.group(2)))
+        matches = matches.groupdict()
+        repo = client.get_repo(matches.get("repo"))
+        pull_request = repo.get_pull(int(matches.get("pull_id")))
 
         return dict(
             base_branch=pull_request.base.ref,
@@ -83,7 +87,8 @@ def has_changes(work_dir, debug):
 @run.command(name="is-behind")
 @click.option("--pr", default=os.getenv("GITHUB_PR_URL"), required=True)
 @click.option("--work-dir", default=os.getcwd())
-def is_behind(pr, work_dir):
+@click.option("--debug", is_flag=True)
+def is_behind(pr, work_dir, debug):
     pr = get_pr_info(pr)
 
     repo = Repo(work_dir)
@@ -91,6 +96,8 @@ def is_behind(pr, work_dir):
     try:
         commits = list(repo.iter_commits(f"origin/{pr['head_branch']}..origin/{pr['base_branch']}"))
         is_behind = len(commits) > 0
+        if debug:
+            click.secho(f"is_behind::{is_behind}", fg="green")
     except BadName as e:
         pass
 
