@@ -71,10 +71,12 @@ def info(pr, debug, work_dir):
 
 
 @run.command(name="has-changes")
+@click.option("--debug", is_flag=True)
 @click.option("--work-dir", default=os.getcwd())
-def has_changes(work_dir):
+def has_changes(work_dir, debug):
     repo = Repo(work_dir)
-
+    if debug:
+        click.secho(f"has_changes::{repo.is_dirty()}", fg="green")
     click.echo(f"::set-output name=has_changes::{'true' if repo.is_dirty() else 'false'}")
 
 
