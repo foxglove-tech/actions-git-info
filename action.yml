@@ -1,0 +1,15 @@
+name: 'Git & Github utility'
+description: 'Set of handful commands to obtain info about Github PR and git repository state'
+branding:
+  color: blue
+  icon: droplet
+inputs:
+  args:
+    description: 'Additional arguments to be passed to gitinfo command'
+    required: false
+    default: ''
+runs:
+  using: 'docker'
+  image: 'docker://epsyhealth/actions-git-info'
+  args:
+    - ${{ inputs.args }}
