@@ -45,7 +45,13 @@ def get_git_info(work_dir):
     if len(tags) > 2:
         previous_tag = tags[-1]
 
+    if current_commit_tag:
+        deployment_ref = f'refs/tags/{current_commit_tag}'
+    else:
+        deployment_ref = os.getenv("GITHUB_REF")
+
     return dict(
+        deployment_ref=deployment_ref,
         current_commit_tag=current_commit_tag,
         previous_tag=str(previous_tag),
         previous_tag_sha=str(previous_tag.tag) if previous_tag else "",
