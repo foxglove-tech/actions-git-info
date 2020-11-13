@@ -41,8 +41,9 @@ def get_git_info(work_dir):
     current_commit_tag = next(filter(lambda x: x.commit == repo.head.commit, repo.tags), "")
 
     previous_tag = ""
-    if len(repo.tags) > 2:
-        previous_tag = repo.tags[-1]
+    tags = list(filter(lambda x: x.commit != repo.head.commit, repo.tags))
+    if len(tags) > 2:
+        previous_tag = tags[-1]
 
     return dict(
         current_commit_tag=current_commit_tag,
