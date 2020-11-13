@@ -35,7 +35,7 @@ def get_pr_info(pr_url):
     return {}
 
 
-def get_git_info(work_dir):
+def get_git_info(work_dir, variables):
     repo = Repo(work_dir)
 
     current_commit_tag = next(filter(lambda x: x.commit == repo.head.commit, repo.tags), "")
@@ -45,8 +45,10 @@ def get_git_info(work_dir):
     if len(tags) > 2:
         previous_tag = tags[-1]
 
-    if current_commit_tag:
-        deployment_ref = f'refs/tags/{current_commit_tag}'
+    if "head_branch" in variables:
+        deployment_ref = variables.get("head_branch")
+    elif current_commit_tag:
+        deployment_ref = f"refs/tags/{current_commit_tag}"
     else:
         deployment_ref = os.getenv("GITHUB_REF")
 
@@ -72,7 +74,7 @@ def info(pr, debug, work_dir):
     if pr:
         variables.update(get_pr_info(pr))
 
-    variables.update(get_git_info(work_dir))
+    variables.update(get_git_info(work_dir, variables))
 
     for k, v in variables.items():
         if debug:
