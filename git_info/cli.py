@@ -39,11 +39,20 @@ def get_git_info(work_dir, variables):
     repo = Repo(work_dir)
 
     current_commit_tag = next(filter(lambda x: x.commit == repo.head.commit, repo.tags), "")
-
-    previous_tag = ""
+    previous_tag = None
     tags = list(filter(lambda x: x.commit != repo.head.commit, repo.tags))
     if len(tags) > 2:
         previous_tag = tags[-1]
+
+    # check deployments if there is no tag
+    if previous_tag is None:
+        previous_tag_sha = ""
+        deployments = repo.get_deployments(environment=os.getenv("STAGE"))
+        deployments = deployments[:10]  # limit to last 10 deployments
+        for i in deployments:
+            for x in repo.get_deployment(i.id).get_statuses():
+                if repo.get_deployment(i.id).get_status(x.id).state == "success" and not previous_tag_sha:
+                    previous_tag_sha = repo.get_deployment(i.id).sha
 
     if "head_branch" in variables:
         deployment_ref = variables.get("head_branch")
@@ -56,7 +65,7 @@ def get_git_info(work_dir, variables):
         deployment_ref=deployment_ref,
         current_commit_tag=current_commit_tag,
         previous_tag=str(previous_tag),
-        previous_tag_sha=str(previous_tag.tag) if previous_tag else "",
+        previous_tag_sha=str(previous_tag.tag) if previous_tag else previous_tag_sha,
     )
 
 
